@@ -1,0 +1,3 @@
+[submodule "ocp_test/acados"]
+	path = ocp_test/acados
+	url = https://github.com/acados/acados.git
