@@ -1,0 +1,2 @@
+% simple bogie friction modelling 
+
