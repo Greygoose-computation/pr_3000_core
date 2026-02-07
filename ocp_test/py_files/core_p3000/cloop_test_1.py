@@ -168,7 +168,7 @@ def build_mpc_solver(F, N, u_min, u_max):
 
     # Weights (tune these)
     # x = [theta_f, omega_f, v_trl, omega_trl, theta_trl]
-    Q  = ca.DM(np.diag([2.0, 0.2, 3.0, 0.3, 2.0]))
+    Q  = ca.DM(np.diag([10.0, 10.0, 10.0, 10., 10.0]))
     R  = ca.DM(np.diag([0.05, 0.05]))
     QN = 5.0 * Q
 
@@ -276,7 +276,7 @@ def main():
 
     # 5-state initial condition
     # x = [theta_f, omega_f, v_trl, omega_trl, theta_trl]
-    x = np.array([1.0, 0.0, 0.2, 0.0, 0.0], dtype=float)
+    x = np.array([0.1, 0.0, 0.2, 0.0, 0.0], dtype=float)
 
     # 5-state reference
     xref = np.array([2.0, 0.0, 0.5, 0.0, 0.0], dtype=float)
