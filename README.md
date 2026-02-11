@@ -1,47 +1,141 @@
 # pr_3000_core
-pr_3000_core_opc.
 
-# Closed-Loop NMPC / OCP (Python Only for now)
+Core NMPC / OCP implementation for the Peer Robotics P3000 robot + trailer platform.
 
-This repository contains a Python-based closed-loop NMPC / OCP test.
+This repository contains:
 
-You do NOT need MATLAB or Simulink.
+- Python-based NMPC (CasADi + ACADOS)
+- Automatic C code generation via ACADOS
+- Standalone C solver build capability
+- No MATLAB / Simulink dependency required
 
-The ONLY file you need to run is:
+------------------------------------------------------------
+PROJECT STRUCTURE OVERVIEW
+------------------------------------------------------------
+
+Repository layout (relevant parts only):
+
+Peer_works/
+│
+├── external/
+│   └── acados/                     → ACADOS submodule (do not modify)
+│
+├── ocp_test/
+│   ├── matlab_files/               → Model verification only (optional)
+│   └── py_files/
+│       ├── core_p3000/             → Main NMPC implementation
+│       │   ├── plant.py            → Continuous-time dynamics definition
+│       │   ├── cloop_test_1.py     → Main closed-loop NMPC test (Python)
+│       │   ├── clptest_pr3000_acsds.py → ACADOS solver generation script
+│       │   ├── p3000_acados_ocp.json → Auto-generated OCP configuration
+│       │   ├── generated_p300_solver.py → Auto-generated (DO NOT EDIT)
+│       │   │
+│       │   ├── c_generated_code_p3000/  → Auto-generated C solver project
+│       │   │   ├── acados_solver_p3000_mpc_model.c/h
+│       │   │   │     → MPC solver interface (C API)
+│       │   │   ├── acados_sim_solver_p3000_mpc_model.c/h
+│       │   │   │     → Integrator-only solver (simulation)
+│       │   │   ├── libacados_ocp_solver_p3000_mpc_model.so
+│       │   │   │     → Compiled MPC shared library
+│       │   │   ├── main_p3000_mpc_model.c
+│       │   │   │     → Auto-generated example main (for testing)
+│       │   │   ├── run_mpc_test
+│       │   │   │     → Manually compiled test executable
+│       │   │   ├── Makefile
+│       │   │   │     → Builds solver libraries
+│       │   │   └── p3000_mpc_model_model/
+│       │   │         ├── p3000_mpc_model_expl_ode_fun.c
+│       │   │         ├── p3000_mpc_model_expl_vde_forw.c
+│       │   │         ├── p3000_mpc_model_expl_vde_adj.c
+│       │   │         └── p3000_mpc_model_model.h
+│       │   │         → Pure model dynamics exported from CasADi
+│       │   │
+│       │   └── c_generated_code/    → Older auto-generated folder (legacy)
+│       │
+│       ├── unicycle_casadi.py       → Earlier model test
+│       └── main_sim.py              → Simple simulation utilities
+│
+└── README.md
+
+------------------------------------------------------------
+KEY UNDERSTANDING
+------------------------------------------------------------
+
+- Python is used only to define the model and generate the ACADOS solver.
+- The folder c_generated_code_p3000/ is a fully standalone C project.
+- The file libacados_ocp_solver_p3000_mpc_model.so is the compiled MPC solver.
+- run_mpc_test is a local executable used to verify the C solver.
+- MATLAB files are only for model verification and are NOT required.
+
+Workflow:
+
+Python (CasADi model + OCP) 
+      ↓
+ACADOS code generation
+      ↓
+C source files exported
+      ↓
+Shared libraries compiled (.so)
+      ↓
+Standalone executable linked (run_mpc_test)
+
+
+
+------------------------------------------------------------
+CLOSED-LOOP NMPC / OCP
+------------------------------------------------------------
+
+Primary development currently happens in Python.
+
+Main entry file:
 
 ocp_test/py_files/core_p3000/cloop_test_1.py
 
----
+This script:
+- Defines the P3000 robot + trailer dynamics
+- Builds an ACADOS OCP solver
+- Runs closed-loop simulation
+- Automatically generates C solver code
 
-## Requirements
+
+------------------------------------------------------------
+REQUIREMENTS
+------------------------------------------------------------
 
 - Python 3.8+
-- CMake and a C compiler (for acados)
+- CMake
+- GCC or Clang
+- Git (with submodule support)
 
----
 
-## Clone the Repository (IMPORTANT)
+------------------------------------------------------------
+CLONE THE REPOSITORY (IMPORTANT)
+------------------------------------------------------------
 
-This repository uses git submodules (acados).
+This repository uses ACADOS as a git submodule.
+
+Clone with:
 
 git clone --recurse-submodules <REPO_URL>
 
-If you already cloned without submodules:
+If already cloned without submodules:
 
 git submodule update --init --recursive
 
----
 
-## Setup
+------------------------------------------------------------
+PYTHON ENVIRONMENT SETUP - 
+------------------------------------------------------------
 
 cd ocp_test/py_files/core_p3000
 python3 -m venv .venv
 source .venv/bin/activate
 pip install numpy scipy matplotlib casadi
 
----
 
-## Build acados
+------------------------------------------------------------
+BUILD ACADOS - it is a one time
+------------------------------------------------------------
 
 cd ocp_test/acados
 mkdir build
@@ -49,9 +143,9 @@ cd build
 cmake ..
 make -j4
 
-Add the following to your .bashrc or .zshrc:
+Add the following to your shell configuration :
 
-export ACADOS_INSTALL_DIR=$(pwd)
+export ACADOS_INSTALL_DIR=<path_to_ocp_test/acados>
 export LD_LIBRARY_PATH=$ACADOS_INSTALL_DIR/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=$ACADOS_INSTALL_DIR/interfaces/acados_template:$PYTHONPATH
 
@@ -59,23 +153,134 @@ Reload:
 
 source ~/.bashrc
 
----
 
-## Run
+------------------------------------------------------------
+RUN PYTHON CLOSED-LOOP NMPC
+------------------------------------------------------------
 
 cd ocp_test/py_files/core_p3000
 python cloop_test_1.py
 
----
+This will:
+- Build the ACADOS solver
+- Run closed-loop simulation
+- Export C code into:
 
-## Notes
+c_generated_code_p3000/
+
+
+------------------------------------------------------------
+C CODE GENERATION OVERVIEW
+------------------------------------------------------------
+
+When the solver is created in Python:
+
+solver = AcadosOcpSolver(...)
+
+ACADOS automatically:
+
+1. Generates C source files for the model
+2. Generates derivative and sensitivity code
+3. Generates solver wrapper code
+4. Compiles shared libraries
+5. Exports everything into:
+
+c_generated_code_p3000/
+
+Important generated artifacts include:
+
+- acados_solver_p3000_mpc_model.c/h  → MPC solver interface
+- p3000_mpc_model_expl_ode_fun.c     → system dynamics
+- libacados_ocp_solver_p3000_mpc_model.so → compiled solver library
+
+
+------------------------------------------------------------
+BUILD THE C SOLVER (STANDALONE)
+------------------------------------------------------------
+
+cd c_generated_code_p3000
+make
+
+This produces:
+
+libacados_ocp_solver_p3000_mpc_model.so
+
+
+------------------------------------------------------------
+RUNNING THE GENERATED C SOLVER
+------------------------------------------------------------
+
+To test the solver in pure C:
+
+gcc -O2 main_p3000_mpc_model.c \
+  -I. \
+  -I<ACADOS_INSTALL_DIR>/include \
+  -I<ACADOS_INSTALL_DIR>/include/acados \
+  -I<ACADOS_INSTALL_DIR>/include/blasfeo/include \
+  -I<ACADOS_INSTALL_DIR>/include/hpipm/include \
+  -L. -lacados_ocp_solver_p3000_mpc_model \
+  -L<ACADOS_INSTALL_DIR>/lib \
+  -lacados -lhpipm -lblasfeo -lm \
+  -Wl,-rpath,'$ORIGIN' \
+  -Wl,-rpath,<ACADOS_INSTALL_DIR>/lib \
+  -o run_mpc_test
+
+Run:
+
+./run_mpc_test
+
+
+------------------------------------------------------------
+IMPORTANT NOTE ON EXAMPLE C MAIN
+------------------------------------------------------------
+
+The auto-generated file:
+
+main_p3000_mpc_model.c
+
+does NOT initialize:
+- system parameters
+- stage references
+- initial state constraints
+
+If parameters are left at zero, the solver may fail with:
+
+ACADOS_NAN_DETECTED
+
+This is expected and is NOT a linking or build issue.
+
+For correct execution, parameters must be set using:
+
+p3000_mpc_model_acados_update_params(...)
+
+before calling the solver.
+
+
+------------------------------------------------------------
+CURRENT STATUS
+------------------------------------------------------------
+
+- Python closed-loop NMPC: Working
+- ACADOS C code generation: Working
+- Standalone C solver build: Working
+- Pure C execution: Working (requires correct parameter initialization)
+- No MATLAB dependency
+- Ready for integration into ROS2 / embedded pipeline
+
+
+------------------------------------------------------------
+NOTES
+------------------------------------------------------------
 
 - generated_p300_solver.py is auto-generated — do not edit
-- MATLAB / Simulink files are just for model verification not required at any stage of implementation 
+- MATLAB / Simulink files are only for model verification
+- All runtime logic is Python + C (ACADOS)
 
----
 
-## License
+------------------------------------------------------------
+LICENSE
+------------------------------------------------------------
 
-Since the OCP Acados is open-source , we will have to keep the src open-source as well
+ACADOS is open-source.
+Project licensing will follow ACADOS licensing requirements where applicable.
 

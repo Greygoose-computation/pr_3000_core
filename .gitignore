@@ -1,2 +1,24 @@
-anydesk-7.1.3-amd64/
-anydesk-*/
+# Python envs
+env/
+.venv/
+ocp_test/py_files/nmpc-env/
+
+# IDE
+.idea/
+
+# MATLAB / Simulink generated
+*.mat
+slprj/
+*.slxc
+
+# Generated ACADOS exports (do not commit)
+ocp_test/py_files/core_p3000/c_generated_code/
+ocp_test/py_files/core_p3000/c_generated_code_p3000/
+ocp_test/py_files/core_p3000/p3000_acados_ocp.json
+
+# Bytecode
+__pycache__/
+*.pyc
+
+# Local runtime/test folders
+z_model_test_nruntime/

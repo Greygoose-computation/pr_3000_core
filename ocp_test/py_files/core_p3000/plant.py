@@ -7,6 +7,13 @@ import matplotlib.pyplot as plt
 #-p3000 model for pivot body dynamics
 
 """ 
+    # Friction parameters 
+    y = 0.3 * ( ( exp( 5*(5*sqrt(x.^2) - 0.2) ) - exp( -10*(5*sqrt(x.^2) - 0.5) ) ) ./ ...
+            ( exp(10*(5*sqrt(x.^2) - 0.5)) + exp( -10*(5*sqrt(x.^2) - 0.5) ) ) ...
+          + 1.0 );
+    
+    where y = effective friction coeff.
+          x = velcoity of the body 
     # pivot body input dynamics 
     dd_theta_f=(((tau1-tau2)/r_dwl)*2*(r_dw))/(I_pivot)-(accel_f*sin(theta_f)/l_wb) : angular acceleration of the steering pivot  --> diff #1
     
@@ -55,6 +62,11 @@ def make_p3000_plant():
     tau2 = ca.SX.sym("tau2")
     u = ca.vertcat(tau1, tau2)
 
+    #------------------------
+    # Plant order
+    # x_dot = f(X,U)
+    # y     = g(X,U)
+
     # ---- parameters ----
     r_dw     = ca.SX.sym("r_dw")      # drive wheel radius for pivot dynamics term (your notation)
     r_dwl    = ca.SX.sym("r_dwl")     # effective wheel radius/lever used for forces
@@ -89,18 +101,24 @@ def make_p3000_plant():
 
     # smoothening for friction        !!!review this before freezing this !!!
 
-    # TODO
-    eps = 1e-3
-    sig_v = v_trl / ca.sqrt(v_trl ** 2 + eps)          # ~sign(v_trl)
-    sig_w = omega_trl / ca.sqrt(omega_trl ** 2 + eps)  # ~sign(omega_trl)
+    def fric_eff(v):
+        x = ca.fabs(v)
+
+        mu = 0.05 * (
+                (ca.exp(5 * (5 * x - 0.2)) - ca.exp(-10 * (5 * x - 0.5))) /
+                (ca.exp(10 * (5 * x - 0.5)) + ca.exp(-10 * (5 * x - 0.5)))
+                + 1.0
+        )
+
+        return mu
 
     # ---- forces from inputs ----
     F_rect = ((tau1 + tau2) / r_dwl) * ca.cos(theta_f)
     F_rot = ((tau1 - tau2) / r_dwl) * ca.cos(theta_f)
 
     # ---- trailer dynamics ----
-    accel_trl = (F_rect - f_ric * M * g * sig_v) / M
-    alpha_trl = (F_rot * l_wb - f_ric * M * g * r_trl * sig_w) / I
+    accel_trl = (F_rect - fric_eff(v_trl) * M * g ) / M
+    alpha_trl = (F_rot * l_wb - fric_eff(v_trl) * M * g * r_trl) / I
 
     # ---- connector dynamics ----
     theta = theta_f
@@ -178,13 +196,13 @@ def main():
 
     # ---- initial state ----
     # x = [theta_f, omega_f, v_trl, omega_trl, theta_trl]
-    x = np.array([-5.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
+    x = np.array([0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
 
     # ---- inputs ----
     # u = [tau1, tau2]
-    u = np.array([2.0, 2.0], dtype=float)
+    u = np.array([7.5, 7.5], dtype=float)
 
-    T = 10.0
+    T = 100.0
     N = int(T / dt)
     t = np.linspace(0.0, T, N + 1)
 
