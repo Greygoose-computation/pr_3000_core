@@ -15,47 +15,7 @@ PROJECT STRUCTURE OVERVIEW
 
 Repository layout (relevant parts only):
 
-Peer_works/
-│
-├── external/
-│   └── acados/                     → ACADOS submodule (do not modify)
-│
-├── ocp_test/
-│   ├── matlab_files/               → Model verification only (optional)
-│   └── py_files/
-│       ├── core_p3000/             → Main NMPC implementation
-│       │   ├── plant.py            → Continuous-time dynamics definition
-│       │   ├── cloop_test_1.py     → Main closed-loop NMPC test (Python)
-│       │   ├── clptest_pr3000_acsds.py → ACADOS solver generation script
-│       │   ├── p3000_acados_ocp.json → Auto-generated OCP configuration
-│       │   ├── generated_p300_solver.py → Auto-generated (DO NOT EDIT)
-│       │   │
-│       │   ├── c_generated_code_p3000/  → Auto-generated C solver project
-│       │   │   ├── acados_solver_p3000_mpc_model.c/h
-│       │   │   │     → MPC solver interface (C API)
-│       │   │   ├── acados_sim_solver_p3000_mpc_model.c/h
-│       │   │   │     → Integrator-only solver (simulation)
-│       │   │   ├── libacados_ocp_solver_p3000_mpc_model.so
-│       │   │   │     → Compiled MPC shared library
-│       │   │   ├── main_p3000_mpc_model.c
-│       │   │   │     → Auto-generated example main (for testing)
-│       │   │   ├── run_mpc_test
-│       │   │   │     → Manually compiled test executable
-│       │   │   ├── Makefile
-│       │   │   │     → Builds solver libraries
-│       │   │   └── p3000_mpc_model_model/
-│       │   │         ├── p3000_mpc_model_expl_ode_fun.c
-│       │   │         ├── p3000_mpc_model_expl_vde_forw.c
-│       │   │         ├── p3000_mpc_model_expl_vde_adj.c
-│       │   │         └── p3000_mpc_model_model.h
-│       │   │         → Pure model dynamics exported from CasADi
-│       │   │
-│       │   └── c_generated_code/    → Older auto-generated folder (legacy)
-│       │
-│       ├── unicycle_casadi.py       → Earlier model test
-│       └── main_sim.py              → Simple simulation utilities
-│
-└── README.md
+/ocp_test/py_files/core_p3000/cloop_test_1.py
 
 ------------------------------------------------------------
 KEY UNDERSTANDING
