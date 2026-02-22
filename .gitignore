@@ -20,5 +20,9 @@ ocp_test/py_files/core_p3000/p3000_acados_ocp.json
 __pycache__/
 *.pyc
 
+# Anydesk
+anydesk-7.1.3-amd64/
+
+
 # Local runtime/test folders
 z_model_test_nruntime/

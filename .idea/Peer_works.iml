@@ -2,6 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/ocp_test/acados/interfaces/acados_template" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/ocp_test/py_files/nmpc-env" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12 (Peer_works)" jdkType="Python SDK" />

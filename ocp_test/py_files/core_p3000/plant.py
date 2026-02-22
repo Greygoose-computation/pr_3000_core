@@ -200,7 +200,7 @@ def main():
 
     # ---- inputs ----
     # u = [tau1, tau2]
-    u = np.array([7.5, 7.5], dtype=float)
+    u = np.array([10.0, 10.0], dtype=float)
 
     T = 100.0
     N = int(T / dt)
